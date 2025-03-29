@@ -1,10 +1,11 @@
-% Backward Euler Method
-function y = backward_euler(f, t_values, y0, h)
-  N = length(t_values);
-  y = zeros(1,N);
-  y(1) = y0;
-
-  for n = 1:N-1
-    y(n+1) = (y(n) + h * sin(t_values(n+1))) / (1+ 50*h);
-  endfor
+function [x,y] = Eulerbackward(f,xinit,xend,yinit,h)
+N = (xend-xinit)/h;
+x = zeros(1, N+1);
+y = zeros(1, N+1);
+x(1) = xinit;
+y(1) = yinit;
+for i=1:N
+ x(i+1) = x(i)+h;
+ y(i+1) = y(i) + h*feval(f,x(i+1),y(i+1));
+end
 end
