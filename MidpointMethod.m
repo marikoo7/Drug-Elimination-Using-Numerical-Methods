@@ -11,3 +11,5 @@ function [x,y] = MidpointMethod(f,xinit,xend,yinit,h)
   end;
   end;
 
+  
+
