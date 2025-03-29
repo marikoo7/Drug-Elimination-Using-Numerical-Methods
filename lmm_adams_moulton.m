@@ -1,4 +1,4 @@
-
+%lmm_adams_moulton: Two-step Adams-Moulton method for solving ODEs.
 function [x, y] = lmm_adams_moulton(f, x0, xn, y0, h)
     N = (xn - x0) / h;
     x = linspace(x0, xn, N+1);
