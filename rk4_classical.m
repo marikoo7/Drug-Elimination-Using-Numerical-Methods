@@ -1,4 +1,4 @@
- %% Classical Runge-Kutta (RK4)
+
 function [x, y] = rk4_classical(f, x0, xn, y0, h)
     N = (xn - x0) / h;
     x = linspace(x0, xn, N+1);
