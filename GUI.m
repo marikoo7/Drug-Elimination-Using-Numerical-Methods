@@ -1,68 +1,71 @@
-function drug_elimination_gui
+function GUI()
     % Create the figure
-    fig = figure('Name', 'Drug Elimination Model', 'Position', [100 100 400 400]);
+    f = figure('Position',[300, 200, 500, 450],'Name','Drug Elimination GUI');
 
-    % Input fields
-    uicontrol('Style', 'text', 'Position', [30 350 60 20], 'String', 'C0:');
-    c0_input = uicontrol('Style', 'edit', 'Position', [100 350 100 20], 'String', '100');
+    % Labels and input fields
+    uicontrol(f,'Style','text','Position',[50,400,100,20],'String','C₀ (Initial)');
+    C0_edit = uicontrol(f,'Style','edit','Position',[160,400,100,20],'String','100');
 
-    uicontrol('Style', 'text', 'Position', [30 310 60 20], 'String', 'k:');
-    k_input = uicontrol('Style', 'edit', 'Position', [100 310 100 20], 'String', '0.1');
+    uicontrol(f,'Style','text','Position',[50,370,100,20],'String','k (Rate const)');
+    k_edit = uicontrol(f,'Style','edit','Position',[160,370,100,20],'String','0.1');
 
-    uicontrol('Style', 'text', 'Position', [30 270 60 20], 'String', 'h:');
-    h_input = uicontrol('Style', 'edit', 'Position', [100 270 100 20], 'String', '0.5');
+    uicontrol(f,'Style','text','Position',[50,340,100,20],'String','h (Step size)');
+    h_edit = uicontrol(f,'Style','edit','Position',[160,340,100,20],'String','0.1');
 
-    uicontrol('Style', 'text', 'Position', [30 230 60 20], 'String', 't_final:');
-    t_input = uicontrol('Style', 'edit', 'Position', [100 230 100 20], 'String', '10');
+    uicontrol(f,'Style','text','Position',[50,310,100,20],'String','t_{final}');
+    tfinal_edit = uicontrol(f,'Style','edit','Position',[160,310,100,20],'String','10');
 
     % Dropdown for method selection
-    uicontrol('Style', 'text', 'Position', [30 190 100 20], 'String', 'Method:');
-    method_menu = uicontrol('Style', 'popupmenu', 'Position', [130 190 100 20], ...
-        'String', {'Euler', 'Heun', 'RK4'});
+    uicontrol(f,'Style','text','Position',[50,270,120,20],'String','Numerical Method');
+    method_popup = uicontrol(f,'Style','popupmenu','Position',[180,270,180,25],...
+        'String',{'Euler Forward','Euler Backward','Heun''s','Midpoint','RK4','Adams-Bashforth','Adams-Moulton'});
 
-    % Plot button
-    uicontrol('Style', 'pushbutton', 'String', 'Solve & Plot', ...
-        'Position', [100 140 150 30], 'Callback', @solveODE);
+    % Solve Button
+    uicontrol(f,'Style','pushbutton','Position',[200,230,80,30],'String','Solve',...
+        'Callback',@solve_callback);
 
-    % Axes for plotting
-    ax = axes('Units', 'pixels', 'Position', [50 20 300 100]);
+    % Axes for plot
+    ax = axes(f,'Units','pixels','Position',[70,20,350,190]);
 
-    % Callback function
-    function solveODE(~, ~)
-        C0 = str2double(get(c0_input, 'String'));
-        k = str2double(get(k_input, 'String'));
-        h = str2double(get(h_input, 'String'));
-        tf = str2double(get(t_input, 'String'));
-        method_idx = get(method_menu, 'Value');
-
+    function solve_callback(~,~)
+        % Get user input
+        C0 = str2double(get(C0_edit,'String'));
+        k = str2double(get(k_edit,'String'));
+        h = str2double(get(h_edit,'String'));
+        tf = str2double(get(tfinal_edit,'String'));
+        method_id = get(method_popup,'Value');
+        
+        % Time vector
         t = 0:h:tf;
-        C = zeros(size(t));
-        C(1) = C0;
+        N = length(t);
 
-        % Choose method
-        for i = 1:(length(t)-1)
-            switch method_idx
-                case 1  % Euler
-                    C(i+1) = C(i) + h * (-k * C(i));
-                case 2  % Heun
-                    k1 = -k * C(i);
-                    k2 = -k * (C(i) + h * k1);
-                    C(i+1) = C(i) + (h/2) * (k1 + k2);
-                case 3  % RK4
-                    k1 = -k * C(i);
-                    k2 = -k * (C(i) + 0.5*h*k1);
-                    k3 = -k * (C(i) + 0.5*h*k2);
-                    k4 = -k * (C(i) + h*k3);
-                    C(i+1) = C(i) + (h/6)*(k1 + 2*k2 + 2*k3 + k4);
-            end
+        % Solve using selected method
+        switch method_id
+            case 1 % Euler Forward
+                [~, C] = EulerForward(@(t, C) -k*C, 0, tf, C0, h);
+            case 2 % Euler Backward
+                [~, C] = EulerBackward(@(t, C) -k*C, 0, tf, C0, h);
+            case 3 % Heun
+                [~, C] = HeunsMethod(@(t, C) -k*C, 0, tf, C0, h);
+            case 4 % Midpoint
+                [~, C] = MidpointMethod(@(t, C) -k*C, 0, tf, C0, h);
+            case 5 % RK4
+                [~, C] = rk4_classical(@(t, C) -k*C, 0, tf, C0, h);
+            case 6 % Adams-Bashforth
+                [~, C] = adams_bashforth(@(t, C) -k*C, 0, tf, C0, h);
+            case 7 % Adams-Moulton
+                [~, C] = lmm_adams_moulton(@(t, C) -k*C, 0, tf, C0, h);
+            otherwise
+                errordlg('Invalid method selection');
+                return;
         end
 
         % Plot result
-        plot(ax, t, C, 'LineWidth', 2);
-        title(ax, 'Drug Concentration Over Time');
-        xlabel(ax, 'Time (t)');
-        ylabel(ax, 'Concentration (C)');
-        grid(ax, 'on');
+        cla(ax);
+        plot(ax, t, C, 'b-', 'LineWidth', 2);
+        title(ax,'Drug Elimination');
+        xlabel(ax,'Time');
+        ylabel(ax,'Concentration');
+        grid(ax,'on');
     end
 end
-
