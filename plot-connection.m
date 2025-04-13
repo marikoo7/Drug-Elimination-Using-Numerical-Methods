@@ -1,4 +1,4 @@
-function project(t, C1, C2, C3)
+function plot-connection(t, C1, C2, C3)
     figure;
     plot(t, C1, '-o', 'LineWidth', 2); hold on;
     plot(t, C2, '--s', 'LineWidth', 2);
